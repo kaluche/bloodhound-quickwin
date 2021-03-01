@@ -3,7 +3,7 @@
 # @Author: kaluche
 # @Date:   2020-12-08 08:29:31
 # @Last Modified by:   kaluche
-# @Last Modified time: 2021-02-16 17:22:48
+# @Last Modified time: 2021-03-01 16:10:05
 
 
 # pip3 install py2neo
@@ -55,10 +55,10 @@ except Exception as e:
 	print(e)
 	exit(0)	
 
-print_title("Enumerating all domains admins (recursive)")
+print_title("Enumerating all domains admins (rid:512|544) (recursive)")
 req = g.run("""MATCH p=(n:Group)<-[:MemberOf*1..]-(m) 
-	WHERE n.objectid =~ "(?i)S-1-5-.*-512" 
-	RETURN m.name,m.enabled,m.hasspn,m.dontreqpreauth,m.unconstraineddelegation,m.lastlogontimestamp
+	WHERE n.objectid =~ ".*(?i)S-1-5-.*-(512|544)"
+	RETURN DISTINCT m.name,m.enabled,m.hasspn,m.dontreqpreauth,m.unconstraineddelegation,m.lastlogontimestamp
 	ORDER BY m.enabled DESC,m.name""").to_table()
 
 for u in req:
@@ -80,9 +80,9 @@ for u in req:
 
 print_title("Enumerating privileges SPN")
 req = g.run("""MATCH p=(n:Group)<-[:MemberOf*1..]-(m) 
-	WHERE n.objectid =~ "(?i)S-1-5-.*-512" 
+	WHERE n.objectid =~ ".*(?i)S-1-5-.*-(512|544)"
 	AND m.hasspn = TRUE 
-	RETURN m.name,m.enabled 
+	RETURN DISTINCT m.name,m.enabled 
 	ORDER BY m.enabled DESC,m.name""").to_table()
 if not req:
 	print('[-] No entries found')
@@ -94,9 +94,9 @@ for u in req:
 
 print_title("Enumerating privileges AS REP ROAST")
 req = g.run("""MATCH p=(n:Group)<-[:MemberOf*1..]-(m) 
-	WHERE n.objectid =~ "(?i)S-1-5-.*-512" 
+	WHERE n.objectid =~ ".*(?i)S-1-5-.*-(512|544)" 
 	AND m.dontreqpreauth = TRUE 
-	RETURN m.name,m.enabled
+	RETURN DISTINCT m.name,m.enabled
 	ORDER BY m.enabled DESC,m.name""").to_table()
 if not req:
 	print('[-] No entries found')
@@ -186,7 +186,7 @@ PWD_SINCE_5_YEAR = stats_return_count("MATCH (u:User) WHERE u.pwdlastset < (date
 PWD_SINCE_10_YEAR = stats_return_count("MATCH (u:User) WHERE u.pwdlastset < (datetime().epochseconds - (10 * 365 * 86400)) and NOT u.pwdlastset IN [-1.0, 0.0] AND u.enabled = TRUE RETURN count(u)")
 ALL_USERS_SPN = stats_return_count("MATCH p=(u:User) WHERE u.hasspn = TRUE RETURN count(*)")
 ALL_USERS_ASREPROAST = stats_return_count("MATCH p=(u:User) WHERE u.dontreqpreauth = TRUE RETURN count(*)")
-ALL_USERS_DOM_ADM = stats_return_count("""MATCH p=(n:Group)<-[:MemberOf*1..]-(m) WHERE n.objectid =~ "(?i)S-1-5-.*-512" RETURN count(m)""")
+ALL_USERS_DOM_ADM = stats_return_count("""MATCH p=(n:Group)<-[:MemberOf*1..]-(m) WHERE n.objectid =~ ".*(?i)S-1-5-.*-(512|544)"  AND m:User RETURN count(DISTINCT m)""")
 ALL_USER_NEVER_LOG_ENABLE = stats_return_count("MATCH (u:User) WHERE u.lastlogontimestamp =-1.0 AND u.enabled=TRUE RETURN count(u)")
 
 mytable.add_row(["All users","N/A", ALL_USERS])
