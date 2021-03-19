@@ -1,5 +1,5 @@
 # bloodhound-quickwin
-Simple script to extract useful informations from the combo BloodHound + Neo4j. Can help to define a target.
+Simple script to extract useful informations from the combo BloodHound + Neo4j. Can help to choose a target.
 
 ## Prerequisites
 - python3
@@ -12,6 +12,23 @@ pip3 install pandas
 - Start your neo4j console
 - Import "*.json" in [bloodhounnd](https://github.com/fox-it/BloodHound.py)
 - Run ./bhqc.py
+
+## Usage
+```bash
+kaluche@pwn $ ./bhqc.py -h
+usage: bhqc.py [-h] [-b BOLT] [-u USERNAME] [-p PASSWORD]
+
+Quick win for bloodhound + neo4j
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -b BOLT, --bolt BOLT  Neo4j bolt connexion (default: bolt://127.0.0.1:7687)
+  -u USERNAME, --username USERNAME
+                        Neo4j username (default : neo4j)
+  -p PASSWORD, --password PASSWORD
+                        Neo4j password (default : neo4j)
+```
+
 
 ## Output
 ```bash
