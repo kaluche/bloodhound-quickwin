@@ -3,7 +3,7 @@
 # @Author: kaluche
 # @Date:   2020-12-08 08:29:31
 # @Last Modified by:   kaluche
-# @Last Modified time: 2021-03-01 16:10:05
+# @Last Modified time: 2021-03-19 08:41:44
 
 
 # pip3 install py2neo
@@ -155,6 +155,23 @@ for u in req:
 		print(" \33[93m[AdminCount]\33[0m",end="")
 	print("")
 
+print_title("Enumerating Constrained account")
+req = g.run("""MATCH (u:User) 
+	WHERE u.allowedtodelegate <> "null" 
+	RETURN u.name,u.enabled,u.admincount,u.allowedtodelegate
+	ORDER BY u.enabled DESC,u.name""").to_table()
+if not req:
+	print('[-] No entries found')
+for u in req:
+	if u[1] == False:
+		print("[+] Constrained user (disabled) \t: \33[90m{}\33[0m".format(u[0]),end="")
+	if u[1] == True:
+		print("[+] Constrained user (enabled) \t: \33[92m{}\33[0m".format(u[0]),end="")
+	if u[2] == True:
+		print(" \33[93m[AdminCount]\33[0m",end="")
+	if u[3] != "null":
+		print(" \33[35m{}\33[0m".format(u[3]),end="")
+	print("")
 
 print_title("Enumerating Unconstrained computer")
 req = g.run("""MATCH (u:Computer) 
