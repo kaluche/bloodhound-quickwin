@@ -6,6 +6,7 @@ Simple script to extract useful informations from the combo BloodHound + Neo4j. 
 ```bash
 pip3 install py2neo
 pip3 install pandas
+pip3 install prettytable
 ```
 ## Example
 - Use your favorite [ingestor](https://github.com/fox-it/BloodHound.py) to gather ".json"
