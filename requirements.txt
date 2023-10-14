@@ -1,3 +1,3 @@
-py2neo
+git+https://github.com/elena/py2neo
 pandas
 prettytable
