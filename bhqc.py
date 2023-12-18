@@ -367,8 +367,20 @@ for u in req:
 
 # todo: testing this query against a vuln AD
 print_title("Can configure Resource-Based Constrained Delegation")
-query = """MATCH p=(m{domain_query})-[r:AddAllowedToAct]->(n{domain_query}) 
-	RETURN m.name,n.name,m.owned,n.owned
+query = """MATCH (admins{domain_query})-[r1:MemberOf*0..]->(g1:Group{domain_query}) 
+	WHERE g1.objectid =~ "(?i).*S-1-5-.*-(512|516|518|519|520|544|548|549|551|553)" 
+			OR g1.objectid =~ "(?i).*S-1-5-9.*" 
+			OR g1.name =~ "EXCHANGE WINDOWS PERMISSIONS@.*" 
+			OR g1.name =~ "EXCHANGE ORGANIZATION ADMINISTRATORS@.*" 
+			OR g1.name =~ "EXCHANGE SERVERS@.*" 
+			OR g1.name =~ "EXCHANGE ENTERPRISE SERVERS@.*" 
+			OR g1.name =~ "ORGANIZATION MANAGEMENT@.*"
+			OR g1.name =~ "DNSADMINS@.*" 
+			WITH COLLECT(admins) AS exclude
+	MATCH p=(m{domain_query})-[r:AddAllowedToAct|GenericAll|GenericWrite|Owns|WriteAccountRestrictions|WriteDacl|WriteOwner|AllExtendedRights]->(n{domain_query}) 
+	WHERE NOT m IN exclude
+	UNWIND r as rr 
+	RETURN m.name,n.name,m.owned,n.owned,type(rr)
 	ORDER BY m.name,n.name
 	""".format(domain_query=domain_query)
 req = g.run(query).to_table()
@@ -379,7 +391,7 @@ for u in req:
 	print("[+] RBCD : configure from \33[92m{}\33[0m".format(u[0]),end="")
 	if u[2]:
 		print(" \33[91m[OWNED]\33[0m",end="")
-	print(" to \33[92m{}\33[0m".format(u[1]),end="")
+	print(" --> \33[35m{}\33[0m --> \33[92m{}\33[0m".format(u[4],u[1]),end="")
 	if u[3]:
 		print(" \33[91m[OWNED]\33[0m",end="")
 	print("")
@@ -387,12 +399,13 @@ for u in req:
 # todo: testing this query against a vuln AD
 print_title("Non-Admins who can DCSYNC")
 query = """MATCH (admins{domain_query})-[r1:MemberOf*0..]->(g1:Group{domain_query}) 
-	WHERE g1.objectid =~ "(?i).*S-1-5-.*-(512|516|518|519|520|544|548|549|551)" 
+	WHERE g1.objectid =~ "(?i).*S-1-5-.*-(512|516|518|519|520|544|548|549|551|553)" 
 			OR g1.name =~ "EXCHANGE WINDOWS PERMISSIONS@.*" 
 			OR g1.name =~ "EXCHANGE ORGANIZATION ADMINISTRATORS@.*" 
 			OR g1.name =~ "EXCHANGE SERVERS@.*" 
 			OR g1.name =~ "EXCHANGE ENTERPRISE SERVERS@.*" 
 			OR g1.name =~ "ORGANIZATION MANAGEMENT@.*" 
+			OR g1.name =~ "DNSADMINS@.*" 
 			WITH COLLECT(admins) AS exclude
 	MATCH p=(n1{domain_query})-[:MemberOf|GetChanges|GetChangesAll*0..]->(u:Domain{domain_query}) 
 	WHERE NOT n1 IN exclude and (n1:Computer or n1:User) 
@@ -453,7 +466,8 @@ if args.heavy == True:
 		OR dagroup.name =~ "EXCHANGE SERVERS@.*" 
 		OR dagroup.name =~ "EXCHANGE ENTERPRISE SERVERS@.*" 
 		OR dagroup.name =~ "EXCHANGE TRUSTED SUBSYSTEM@.*" 
-		OR dagroup.name =~ "ORGANIZATION MANAGEMENT@.*" 
+		OR dagroup.name =~ "ORGANIZATION MANAGEMENT@.*"
+		OR dagroup.name =~ "DNSADMINS@.*"  
 		WITH COLLECT(dagroup) AS exclude 
 		
 		MATCH (g:Group{domain_query}) 
@@ -483,7 +497,7 @@ if args.heavy == True:
 	# Filtering: MATCH p=allShortestPaths((u1)-[r:AllExtendedRights|ForceChangePassword|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner*1..]->(u2)) 
 	print_title("relationships - testing which (non admins) users can do what to others (all)")
 	query = """MATCH (admins{domain_query})-[r1:MemberOf*0..]->(g1:Group{domain_query}) 
-		WHERE g1.objectid =~ "(?i).*S-1-5-.*-(512|516|518|519|520|544|548|549|551)" 
+		WHERE g1.objectid =~ "(?i).*S-1-5-.*-(512|516|518|519|520|544|548|549|551|553)" 
 		OR g1.name =~ "EXCHANGE WINDOWS PERMISSIONS@.*" 
 		OR g1.name =~ "EXCHANGE ORGANIZATION ADMINISTRATORS@.*" 
 		OR g1.name =~ "EXCHANGE SERVERS@.*" 
