@@ -11,7 +11,7 @@ pip3 install prettytable
 ## Example
 - Use your favorite [ingestor](https://github.com/fox-it/BloodHound.py) to gather ".json"
 - Start your neo4j console
-- Import "*.json" in [bloodhounnd](https://github.com/fox-it/BloodHound.py)
+- Import "*.json" in [bloodhound](https://github.com/fox-it/BloodHound.py)
 - Run ./bhqc.py
 
 ## Usage
