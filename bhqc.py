@@ -3,74 +3,74 @@
 # @Author: kaluche
 # @Date:   2020-12-08 08:29:31
 # @Last Modified by:   kaluche
-# @Last Modified time: 2023-07-17 16:30:00
+# @Last Update: 2023-07-17 16:30:00
 
+# Modified some lines by shkz 2024-10-03 23:43:00 
+# Now the password is passed hidden and not in plain text
 
-# pip3 install py2neo
-# pip3 install pandas
 from py2neo import Graph
 from prettytable import PrettyTable
 import argparse
 import datetime
+import getpass  # getpass import
 
-def args():
-	parser = argparse.ArgumentParser(description="Quick win for bloodhound + neo4j")
-	parser.add_argument('-b', '--bolt', type=str, default="bolt://127.0.0.1:7687", help="Neo4j bolt connexion (default: bolt://127.0.0.1:7687)")
-	parser.add_argument('-u', '--username', type=str, default="neo4j", help="Neo4j username (default : neo4j)")
-	parser.add_argument('-p', '--password', type=str, default="neo4j",help="Neo4j password (default : neo4j)")
-	parser.add_argument('-d', '--domain', type=str, default="",help="Domain filtering (default: no filtering). It's case sensitive and should be mostly in UPPERCASE.")
-	parser.add_argument('--heavy', action='store_true',help="Using this flag to enable heavy querying (ACL, relationships, etc.) can result in durations of seconds or minutes.")
-	parser.add_argument('-l','--list-domains', action='store_true',help="List available domains and exit.")
-	parser.add_argument('--debug', action='store_true',help="Debug queries, more output")
-	return parser.parse_args()
-
+def parse_args():  
+    parser = argparse.ArgumentParser(description="Quick win for bloodhound + neo4j")
+    parser.add_argument('-b', '--bolt', type=str, default="bolt://127.0.0.1:7687", help="Neo4j bolt connexion (default: bolt://127.0.0.1:7687)")
+    parser.add_argument('-u', '--username', type=str, default="neo4j", help="Neo4j username (default: neo4j)")
+    parser.add_argument('-d', '--domain', type=str, default="", help="Domain filtering (default: no filtering). It's case sensitive and should be mostly in UPPERCASE.")
+    parser.add_argument('--heavy', action='store_true', help="Using this flag to enable heavy querying (ACL, relationships, etc.) can result in durations of seconds or minutes.")
+    parser.add_argument('-l', '--list-domains', action='store_true', help="List available domains and exit.")
+    parser.add_argument('--debug', action='store_true', help="Debug queries, more output")
+    return parser.parse_args()
 
 def print_banner():
-	print("\n\33[3m▬▬ι═══════ﺤ  BloodHound QuickWin @ kaluche_   -═══════ι▬▬ \33[0m")
+    print("\n\33[3m▬▬ι═══════ﺤ  BloodHound QuickWin @ kaluche_   -═══════ι▬▬ \33[0m")
 
 def print_title(t):
-	print("\n\33[34m###########################################################")
-	print("[*] {}".format(t))
-	print("###########################################################\33[0m\n")
+    print("\n\33[34m###########################################################")
+    print("[*] {}".format(t))
+    print("###########################################################\33[0m\n")
 
 def print_debug(t):
-	if args.debug:
-		print("\33[3mquery: {}\33[0m".format(t))
-
+    if args.debug:
+        print("\33[3mquery: {}\33[0m".format(t))
 
 def checktimestamp(val):
-	val = val.split(".")[0]
-	res = (datetime.datetime.now() - datetime.datetime.fromtimestamp(int(val)))
-	# print(res)
-	if (val) == "-1":
-		return("\033[95m NEVER\033[0m")
-	if (res > datetime.timedelta(days=365 * 10)) == True:
-		return("\033[31m> 10 years\033[0m")
-	elif (res > datetime.timedelta(days=365 * 5)) == True:
-		return("\033[31m> 5 years\033[0m")
-	elif (res > datetime.timedelta(days=365 * 3)) == True:
-		return("\033[31m> 3 years\033[0m")
-	elif (res > datetime.timedelta(days=365 * 2)) == True:
-		return("\033[35m> 2 years\033[0m")
-	elif (res > datetime.timedelta(days=365 * 1)) == True:
-		return("\033[35m> 1 year\033[0m")
-	elif (res < datetime.timedelta(days=365 )) == True:
-		return("< 1 year")
+    val = val.split(".")[0]
+    res = (datetime.datetime.now() - datetime.datetime.fromtimestamp(int(val)))
+    if val == "-1":
+        return("\033[95m NEVER\033[0m")
+    if res > datetime.timedelta(days=365 * 10):
+        return("\033[31m> 10 years\033[0m")
+    elif res > datetime.timedelta(days=365 * 5):
+        return("\033[31m> 5 years\033[0m")
+    elif res > datetime.timedelta(days=365 * 3):
+        return("\033[31m> 3 years\033[0m")
+    elif res > datetime.timedelta(days=365 * 2):
+        return("\033[35m> 2 years\033[0m")
+    elif res > datetime.timedelta(days=365 * 1):
+        return("\033[35m> 1 year\033[0m")
+    else:
+        return("< 1 year")
 
 def stats_return_count(query):
-	req = g.run(query).to_table()
-	return req[0][0]
+    req = g.run(query).to_table()
+    return req[0][0] if req else 0  # Manejo de caso si la consulta no devuelve resultados
 
-args = args()
+# args var initialized once
+args = parse_args()  
+password = getpass.getpass(prompt="Enter Neo4j password: ")  # password passed hidden
+
 
 #################
 # db connect
 #################
 try:
-	g = Graph(args.bolt, auth=(args.username, args.password))
+    g = Graph(args.bolt, auth=(args.username, password))
 except Exception as e:
-	print(e)
-	exit(0)	
+    print(e)
+    exit(0)
 
 
 #################
