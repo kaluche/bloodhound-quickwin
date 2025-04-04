@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bloodhound-quickwin"
+version = "0.1.0"
+description = "A tool to extract useful information from BloodHound and Neo4j."
+authors = [
+    { name = "kaluche" }
+]
+readme = "README.md"
+requires-python = ">=3.6"
+
+dependencies = [
+    "py2neo @ git+https://github.com/elena/py2neo",
+    "pandas",
+    "prettytable"
+]
+
+[project.scripts]
+bhqc = "bhqc:main"
